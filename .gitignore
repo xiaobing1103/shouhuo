@@ -43,7 +43,7 @@ build/
 *.apk
 *.ap_
 *.aab
-
+.qoder
 # iOS
 ios/
 *.pbxuser

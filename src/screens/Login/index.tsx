@@ -1,80 +1,222 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useDispatch } from 'react-redux';
+import { z } from 'zod';
 import { setCredentials } from '../../store/slices/authSlice';
+import { loginApi } from '../../api/endpoints/auth';
+import { apiConfig } from '../../config/api.config';
+import { useTheme } from '../../hooks/useTheme';
+
+// 登录表单 Zod Schema
+const loginSchema = z.object({
+  employeeId: z.string({
+    required_error: '请输入员工ID',
+  }).min(1, '员工ID不能为空').trim(),
+  
+  password: z.string({
+    required_error: '请输入密码',
+  }).min(1, '密码不能为空'),
+});
 
 export const LoginScreen: React.FC = () => {
   const dispatch = useDispatch();
+  const [employeeId, setEmployeeId] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // 模拟登录，生产环境应调用真实的 API
-    const mockToken = 'mock-token-' + Date.now();
-    const mockStoreId = 'store-001';
-    const mockEmployeeId = 'emp-001';
-
-    dispatch(setCredentials({
-      token: mockToken,
-      storeId: mockStoreId,
-      employeeId: mockEmployeeId,
-    }));
-
-    Alert.alert('登录成功', '欢迎使用自动售卖机系统！');
+  const handleLogin = async () => {
+    // 使用 Zod 进行表单验证
+    try {
+      const formData = loginSchema.parse({
+        employeeId: employeeId.trim(),
+        password: password.trim(),
+      });
+  
+      setLoading(true);
+        
+      const response = await loginApi({
+        serverUrl: apiConfig.baseURL,
+        storeId: '', // 已注释掉门店ID输入框
+        employeeId: formData.employeeId,
+        password: formData.password,
+      });
+  
+      // 后端返回格式: { token, storeId, employeeId }
+      const { token, storeId: returnedStoreId, employeeId: returnedEmployeeId } = response.data;
+  
+      if (!token) {
+        Alert.alert('登录失败', '服务器未返回有效的认证令牌');
+        return;
+      }
+  
+      dispatch(
+        setCredentials({
+          token,
+          storeId: returnedStoreId || 'default',
+          employeeId: returnedEmployeeId || formData.employeeId,
+        })
+      );
+  
+      Alert.alert('登录成功', '欢迎使用自动售卖机系统！');
+    } catch (error: any) {
+      // 处理 Zod 验证错误
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        Alert.alert('提示', firstError.message);
+        return;
+      }
+        
+      // 处理 API 错误
+      console.error('登录失败:', error);
+      const errorMessage = error?.response?.data?.message || error?.message || '登录失败,请检查账号密码';
+      Alert.alert('登录失败', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const { colors, textStyles } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>登录 - 自动售卖机</Text>
-      <Text style={styles.description}>
-        这里是登录页面骨架（店铺ID、员工ID、密码、服务器地址等）。
-      </Text>
-      
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>点击登录（模拟）</Text>
-      </TouchableOpacity>
-      
-      <Text style={styles.hint}>
-        点击后将跳转到商品列表页面
-      </Text>
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* 顶部装饰图片区域 */}
+        <View className="items-end mt-10 mb-5">
+          <View 
+            className="w-[120px] h-[120px] rounded-full justify-center items-center"
+            style={{ backgroundColor: colors.primary + '99' }}
+          >
+            <Text 
+              className="text-2xl font-bold"
+              style={{ color: colors.textInverse }}
+            >
+              售货机
+            </Text>
+          </View>
+        </View>
+
+        {/* 欢迎标题 */}
+        <View className="mb-6">
+          <Text 
+            className="text-5xl font-bold mb-1"
+            style={{ color: colors.text }}
+          >
+            Hello!
+          </Text>
+          <View className="flex-row items-center">
+            <Text 
+              className="text-2xl"
+              style={{ color: colors.text }}
+            >
+              Welcome to{' '}
+            </Text>
+            <Text 
+              className="text-2xl font-bold"
+              style={{ color: colors.primary }}
+            >
+              售货机
+            </Text>
+          </View>
+        </View>
+
+        {/* 输入表单 */}
+        <View className="mb-5">
+          {/* <View 
+            className="rounded-3 mb-3 shadow-sm"
+            style={{ backgroundColor: colors.backgroundCard }}
+          >
+            <TextInput
+              className="h-12 px-4 text-base"
+              style={{ 
+                color: colors.text,
+                letterSpacing: textStyles.letterSpacing,
+              }}
+              placeholder="门店ID"
+              placeholderTextColor={colors.textPlaceholder}
+              value={storeId}
+              onChangeText={setStoreId}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View> */}
+
+          <View 
+            className="rounded-3 mb-3 shadow-sm"
+            style={{ backgroundColor: colors.backgroundCard }}
+          >
+            <TextInput
+              className="h-12 px-4 text-base"
+              style={{ 
+                color: colors.text,
+                letterSpacing: textStyles.letterSpacing,
+              }}
+              placeholder="员工ID"
+              placeholderTextColor={colors.textPlaceholder}
+              value={employeeId}
+              onChangeText={setEmployeeId}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
+
+          <View 
+            className="rounded-3 mb-3 shadow-sm"
+            style={{ backgroundColor: colors.backgroundCard }}
+          >
+            <TextInput
+              className="h-12 px-4 text-base"
+              style={{ 
+                color: colors.text,
+                letterSpacing: textStyles.letterSpacing,
+              }}
+              placeholder="密码"
+              placeholderTextColor={colors.textPlaceholder}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
+        </View>
+
+        {/* 登录按钮 */}
+        <TouchableOpacity
+          className="h-12 rounded-3 justify-center items-center mt-2 shadow-md"
+          style={{ 
+            backgroundColor: loading ? colors.primaryLight : colors.primary,
+            opacity: loading ? 0.7 : 1,
+          }}
+          onPress={handleLogin}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
+          <Text 
+            className="text-lg font-semibold"
+            style={{ color: colors.textInverse }}
+          >
+            {loading ? '登录中...' : '登录'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 32,
-    paddingHorizontal: 20,
-  },
-  button: {
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  hint: {
-    fontSize: 12,
-    color: '#999',
-    fontStyle: 'italic',
-  },
-});
+
+

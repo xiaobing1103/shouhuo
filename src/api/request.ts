@@ -1,7 +1,10 @@
 import axios from 'axios';
+import { apiConfig } from '../config/api.config';
+import { API_TIMEOUT } from '../config/constants';
 
 export const apiClient = axios.create({
-  timeout: 10000,
+  baseURL: apiConfig.baseURL,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

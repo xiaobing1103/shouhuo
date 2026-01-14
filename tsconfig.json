@@ -30,7 +30,8 @@
     "src/**/*",
     "App.tsx",
     "index.ts",
-    "index.js"
+    "index.js",
+    "nativewind-env.d.ts"
   ],
   "exclude": [
     "node_modules",

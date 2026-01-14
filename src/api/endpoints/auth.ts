@@ -6,5 +6,5 @@ export const loginApi = (payload: {
   employeeId: string;
   password: string;
 }) => {
-  return apiClient.post('/api/login', payload);
+  return apiClient.post('/auth/login', payload);
 };

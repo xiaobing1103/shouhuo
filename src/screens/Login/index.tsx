@@ -92,17 +92,17 @@ export const LoginScreen: React.FC = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20 }}
+        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* 顶部装饰图片区域 */}
-        <View className="items-end mt-10 mb-5">
+        {/* 顶部装饰图片区域 - 紧凑版 */}
+        <View className="items-end mt-6 mb-3">
           <View 
-            className="w-[120px] h-[120px] rounded-full justify-center items-center"
+            className="w-[100px] h-[100px] rounded-full justify-center items-center"
             style={{ backgroundColor: colors.primary + '99' }}
           >
             <Text 
-              className="text-2xl font-bold"
+              className="text-lg font-bold"
               style={{ color: colors.textInverse }}
             >
               售货机
@@ -110,23 +110,23 @@ export const LoginScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 欢迎标题 */}
-        <View className="mb-6">
+        {/* 欢迎标题 - 紧凑版 */}
+        <View className="mb-4">
           <Text 
-            className="text-5xl font-bold mb-1"
+            className="text-4xl font-bold mb-1"
             style={{ color: colors.text }}
           >
             Hello!
           </Text>
           <View className="flex-row items-center">
             <Text 
-              className="text-2xl"
+              className="text-xl"
               style={{ color: colors.text }}
             >
               Welcome to{' '}
             </Text>
             <Text 
-              className="text-2xl font-bold"
+              className="text-xl font-bold"
               style={{ color: colors.primary }}
             >
               售货机
@@ -134,33 +134,14 @@ export const LoginScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 输入表单 */}
-        <View className="mb-5">
-          {/* <View 
-            className="rounded-3 mb-3 shadow-sm"
-            style={{ backgroundColor: colors.backgroundCard }}
-          >
-            <TextInput
-              className="h-12 px-4 text-base"
-              style={{ 
-                color: colors.text,
-                letterSpacing: textStyles.letterSpacing,
-              }}
-              placeholder="门店ID"
-              placeholderTextColor={colors.textPlaceholder}
-              value={storeId}
-              onChangeText={setStoreId}
-              autoCapitalize="none"
-              editable={!loading}
-            />
-          </View> */}
-
+        {/* 输入表单 - 紧凑版 */}
+        <View className="mb-3">
           <View 
-            className="rounded-3 mb-3 shadow-sm"
+            className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}
           >
             <TextInput
-              className="h-12 px-4 text-base"
+              className="h-10 px-3 text-sm"
               style={{ 
                 color: colors.text,
                 letterSpacing: textStyles.letterSpacing,
@@ -175,11 +156,11 @@ export const LoginScreen: React.FC = () => {
           </View>
 
           <View 
-            className="rounded-3 mb-3 shadow-sm"
+            className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}
           >
             <TextInput
-              className="h-12 px-4 text-base"
+              className="h-10 px-3 text-sm"
               style={{ 
                 color: colors.text,
                 letterSpacing: textStyles.letterSpacing,
@@ -195,9 +176,9 @@ export const LoginScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 登录按钮 */}
+        {/* 登录按钮 - 紧凑版 */}
         <TouchableOpacity
-          className="h-12 rounded-3 justify-center items-center mt-2 shadow-md"
+          className="h-10 rounded-lg justify-center items-center mt-2 shadow-md"
           style={{ 
             backgroundColor: loading ? colors.primaryLight : colors.primary,
             opacity: loading ? 0.7 : 1,
@@ -207,7 +188,7 @@ export const LoginScreen: React.FC = () => {
           activeOpacity={0.8}
         >
           <Text 
-            className="text-lg font-semibold"
+            className="text-base font-semibold"
             style={{ color: colors.textInverse }}
           >
             {loading ? '登录中...' : '登录'}

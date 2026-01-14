@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "shouhuo",
+    "slug": "shouhuo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.shouhuo.app",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET"
+      ]
+    },
+    "plugins": [
+      "expo-screen-orientation",
+      "expo-file-system"
+    ],
+    "main": "src/index.ts"
+  }
+}

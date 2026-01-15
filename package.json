@@ -8,7 +8,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest"
+    "test": "jest",
+    "setup-mumu": "powershell -ExecutionPolicy Bypass -File ./setup-mumu.ps1",
+    "setup-adb": "powershell -ExecutionPolicy Bypass -File ./setup-adb.ps1",
+    "fix-install": "powershell -ExecutionPolicy Bypass -File ./fix-install.ps1"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.0.0",

@@ -36,7 +36,7 @@ try {
 
 # 2. 添加到 PATH（临时）
 $adbPath = Resolve-Path "$extractPath\platform-tools"
-$env:Path = "$adbPath;$env:Path"
+$env:Path = "$adbPath;" + $env:Path
 
 Write-Host "`n=== MuMu 模拟器连接步骤 ===" -ForegroundColor Cyan
 

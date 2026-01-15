@@ -13,11 +13,15 @@ import { useDispatch } from 'react-redux';
 import { z } from 'zod';
 import { setCredentials } from '../../store/slices/authSlice';
 import { loginApi } from '../../api/endpoints/auth';
-import { apiConfig } from '../../config/api.config';
+import { getDynamicBaseURL } from '../../config/api.config';
 import { useTheme } from '../../hooks/useTheme';
 
 // 登录表单 Zod Schema
 const loginSchema = z.object({
+  storeId: z.string({
+    required_error: '请输入店铺ID',
+  }).min(1, '店铺ID不能为空').trim(),
+
   employeeId: z.string({
     required_error: '请输入员工ID',
   }).min(1, '员工ID不能为空').trim(),
@@ -27,8 +31,9 @@ const loginSchema = z.object({
   }).min(1, '密码不能为空'),
 });
 
-export const LoginScreen: React.FC = () => {
+export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const dispatch = useDispatch();
+  const [storeId, setStoreId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,15 +42,19 @@ export const LoginScreen: React.FC = () => {
     // 使用 Zod 进行表单验证
     try {
       const formData = loginSchema.parse({
+        storeId: storeId.trim(),
         employeeId: employeeId.trim(),
         password: password.trim(),
       });
   
       setLoading(true);
+      
+      // 获取动态配置的服务器地址
+      const serverUrl = await getDynamicBaseURL();
         
       const response = await loginApi({
-        serverUrl: apiConfig.baseURL,
-        storeId: '', // 已注释掉门店ID输入框
+        serverUrl,
+        storeId: formData.storeId,
         employeeId: formData.employeeId,
         password: formData.password,
       });
@@ -61,7 +70,7 @@ export const LoginScreen: React.FC = () => {
       dispatch(
         setCredentials({
           token,
-          storeId: returnedStoreId || 'default',
+          storeId: returnedStoreId || formData.storeId,
           employeeId: returnedEmployeeId || formData.employeeId,
         })
       );
@@ -86,6 +95,12 @@ export const LoginScreen: React.FC = () => {
 
   const { colors, textStyles } = useTheme();
 
+  const handleNavigateToSettings = () => {
+    if (navigation) {
+      navigation.navigate('Settings');
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.background }}
@@ -95,8 +110,20 @@ export const LoginScreen: React.FC = () => {
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16 }}
         keyboardShouldPersistTaps="handled"
       >
+        {/* 右上角设置按钮 */}
+        <View className="items-end mt-4">
+          <TouchableOpacity
+            className="w-10 h-10 rounded-full justify-center items-center"
+            style={{ backgroundColor: colors.backgroundCard }}
+            onPress={handleNavigateToSettings}
+            activeOpacity={0.7}
+          >
+            <Text className="text-xl" style={{ color: colors.text }}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* 顶部装饰图片区域 - 紧凑版 */}
-        <View className="items-end mt-6 mb-3">
+        <View className="items-center mt-2 mb-3">
           <View 
             className="w-[100px] h-[100px] rounded-full justify-center items-center"
             style={{ backgroundColor: colors.primary + '99' }}
@@ -136,6 +163,27 @@ export const LoginScreen: React.FC = () => {
 
         {/* 输入表单 - 紧凑版 */}
         <View className="mb-3">
+          {/* 店铺ID */}
+          <View 
+            className="rounded-lg mb-2 shadow-sm"
+            style={{ backgroundColor: colors.backgroundCard }}
+          >
+            <TextInput
+              className="h-10 px-3 text-sm"
+              style={{ 
+                color: colors.text,
+                letterSpacing: textStyles.letterSpacing,
+              }}
+              placeholder="店铺ID"
+              placeholderTextColor={colors.textPlaceholder}
+              value={storeId}
+              onChangeText={setStoreId}
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
+
+          {/* 员工ID */}
           <View 
             className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}
@@ -155,6 +203,7 @@ export const LoginScreen: React.FC = () => {
             />
           </View>
 
+          {/* 密码 */}
           <View 
             className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}

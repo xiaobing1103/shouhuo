@@ -9,13 +9,33 @@
       "package": "com.shouhuo.app",
       "versionCode": 1,
       "permissions": [
-        "INTERNET"
-      ]
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
     },
     "plugins": [
       "expo-screen-orientation",
       "expo-file-system"
     ],
-    "main": "src/index.ts"
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0627d7dd-04c2-490d-901f-5cb0ac2cc02a"
+      }
+    }
   }
 }

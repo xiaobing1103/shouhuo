@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/MainNavigator';
@@ -8,9 +9,16 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'Payment'>;
 
 export const PaymentScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container, 
+      { 
+        paddingTop: insets.top, 
+        paddingBottom: insets.bottom 
+      }
+    ]}>
       <View style={styles.header}>
         <Text style={styles.title}>支付</Text>
         <TouchableOpacity 

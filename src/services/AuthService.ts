@@ -1,6 +1,6 @@
 export class AuthService {
   // 登录
-  async login(serverUrl: string, storeId: string, employeeId: string, password: string) {
+  async login(serverUrl: string, warehouse_id: string, employee_id: string, password: string) {
     // TODO: 调用登录接口
   }
 

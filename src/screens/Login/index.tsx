@@ -11,18 +11,18 @@ import {
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { z } from 'zod';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setCredentials } from '../../store/slices/authSlice';
 import { loginApi } from '../../api/endpoints/auth';
-import { getDynamicBaseURL } from '../../config/api.config';
 import { useTheme } from '../../hooks/useTheme';
 
 // 登录表单 Zod Schema
 const loginSchema = z.object({
-  storeId: z.string({
-    required_error: '请输入店铺ID',
-  }).min(1, '店铺ID不能为空').trim(),
+  warehouse_id: z.string({
+    required_error: '请输入仓库ID',
+  }).min(1, '仓库ID不能为空').trim(),
 
-  employeeId: z.string({
+  employee_id: z.string({
     required_error: '请输入员工ID',
   }).min(1, '员工ID不能为空').trim(),
   
@@ -33,8 +33,9 @@ const loginSchema = z.object({
 
 export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
   const dispatch = useDispatch();
-  const [storeId, setStoreId] = useState('');
-  const [employeeId, setEmployeeId] = useState('');
+  const insets = useSafeAreaInsets();
+  const [warehouse_id, setWarehouseId] = useState('');
+  const [employee_id, setEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -42,36 +43,36 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
     // 使用 Zod 进行表单验证
     try {
       const formData = loginSchema.parse({
-        storeId: storeId.trim(),
-        employeeId: employeeId.trim(),
+        warehouse_id: warehouse_id.trim(),
+        employee_id: employee_id.trim(),
         password: password.trim(),
       });
   
       setLoading(true);
       
-      // 获取动态配置的服务器地址
-      const serverUrl = await getDynamicBaseURL();
-        
       const response = await loginApi({
-        serverUrl,
-        storeId: formData.storeId,
-        employeeId: formData.employeeId,
+        warehouse_id: formData.warehouse_id,
+        employee_id: formData.employee_id,
         password: formData.password,
       });
   
-      // 后端返回格式: { token, storeId, employeeId }
-      const { token, storeId: returnedStoreId, employeeId: returnedEmployeeId } = response.data;
+      // 后端返回格式: { code: 200, data: { employee_id, ... }, message: "..." }
+      const responseData = response.data;
+      const userData = responseData.data;
   
-      if (!token) {
-        Alert.alert('登录失败', '服务器未返回有效的认证令牌');
+      if (responseData.code !== 200 || !userData) {
+        Alert.alert('登录失败', responseData.message || '服务器返回数据异常');
         return;
       }
   
       dispatch(
         setCredentials({
-          token,
-          storeId: returnedStoreId || formData.storeId,
-          employeeId: returnedEmployeeId || formData.employeeId,
+          token: userData.token || null,
+          warehouse_id: userData.warehouse_id || formData.warehouse_id,
+          employee_id: userData.employee_id || formData.employee_id,
+          employee_name: userData.employee_name,
+          employee_role: userData.employee_role,
+          phone: userData.phone,
         })
       );
   
@@ -103,7 +104,12 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
+      style={{ 
+        flex: 1, 
+        backgroundColor: colors.background,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -163,7 +169,7 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
         {/* 输入表单 - 紧凑版 */}
         <View className="mb-3">
-          {/* 店铺ID */}
+          {/* 仓库ID */}
           <View 
             className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}
@@ -174,10 +180,10 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
                 color: colors.text,
                 letterSpacing: textStyles.letterSpacing,
               }}
-              placeholder="店铺ID"
+              placeholder="仓库ID"
               placeholderTextColor={colors.textPlaceholder}
-              value={storeId}
-              onChangeText={setStoreId}
+              value={warehouse_id}
+              onChangeText={setWarehouseId}
               autoCapitalize="none"
               editable={!loading}
             />
@@ -196,7 +202,7 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
               }}
               placeholder="员工ID"
               placeholderTextColor={colors.textPlaceholder}
-              value={employeeId}
+              value={employee_id}
               onChangeText={setEmployeeId}
               autoCapitalize="none"
               editable={!loading}

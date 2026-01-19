@@ -2,8 +2,8 @@ import { encode as base64Encode, decode as base64Decode } from 'base-64';
 
 interface LoginCredentials {
   serverUrl: string;
-  storeId: string;
-  employeeId: string;
+  warehouse_id: string;
+  employee_id: string;
   password: string;
 }
 

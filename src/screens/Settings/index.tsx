@@ -7,21 +7,21 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { storage } from '../../utils/storage';
 import { useTheme } from '../../hooks/useTheme';
 
 const STORAGE_KEYS = {
   SERVER_BASE_URL: 'server_base_url',
-  ROBOT_BASE_URL: 'robot_base_url',
 };
 
 export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   
   const [serverBaseUrl, setServerBaseUrl] = useState('');
-  const [robotBaseUrl, setRobotBaseUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   // 加载已保存的配置
@@ -32,10 +32,8 @@ export const SettingsScreen: React.FC = () => {
   const loadSettings = async () => {
     try {
       const savedServerUrl = await storage.get<string>(STORAGE_KEYS.SERVER_BASE_URL);
-      const savedRobotUrl = await storage.get<string>(STORAGE_KEYS.ROBOT_BASE_URL);
       
       if (savedServerUrl) setServerBaseUrl(savedServerUrl);
-      if (savedRobotUrl) setRobotBaseUrl(savedRobotUrl);
     } catch (error) {
       console.error('加载设置失败:', error);
     }
@@ -50,15 +48,9 @@ export const SettingsScreen: React.FC = () => {
         Alert.alert('提示', '服务器地址格式不正确');
         return;
       }
-      
-      if (robotBaseUrl && !isValidUrl(robotBaseUrl)) {
-        Alert.alert('提示', '机器人地址格式不正确');
-        return;
-      }
 
       // 保存配置
       await storage.set(STORAGE_KEYS.SERVER_BASE_URL, serverBaseUrl);
-      await storage.set(STORAGE_KEYS.ROBOT_BASE_URL, robotBaseUrl);
       
       Alert.alert('成功', '设置已保存', [
         {
@@ -85,9 +77,7 @@ export const SettingsScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await storage.remove(STORAGE_KEYS.SERVER_BASE_URL);
-            await storage.remove(STORAGE_KEYS.ROBOT_BASE_URL);
             setServerBaseUrl('');
-            setRobotBaseUrl('');
             Alert.alert('成功', '已恢复默认设置');
           },
         },
@@ -105,7 +95,12 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ 
+      flex: 1, 
+      backgroundColor: colors.background,
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+    }}>
       {/* 顶部导航栏 */}
       <View 
         className="h-14 flex-row items-center justify-between px-4 border-b"
@@ -168,32 +163,6 @@ export const SettingsScreen: React.FC = () => {
               placeholderTextColor={colors.textPlaceholder}
               value={serverBaseUrl}
               onChangeText={setServerBaseUrl}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-          </View>
-        </View>
-
-        {/* Robot Base URL */}
-        <View className="mb-6">
-          <Text 
-            className="text-sm font-medium mb-2"
-            style={{ color: colors.text }}
-          >
-            机器人地址 (Robot Base URL)
-          </Text>
-          <View 
-            className="rounded-lg shadow-sm"
-            style={{ backgroundColor: colors.backgroundCard }}
-          >
-            <TextInput
-              className="h-11 px-3 text-sm"
-              style={{ color: colors.text }}
-              placeholder="例如: https://robot.example.com"
-              placeholderTextColor={colors.textPlaceholder}
-              value={robotBaseUrl}
-              onChangeText={setRobotBaseUrl}
               autoCapitalize="none"
               autoCorrect={false}
               editable={!loading}

@@ -15,8 +15,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
   // 从 Redux store 获取登录状态
-  const token = useSelector((state: RootState) => state.auth.token);
-  const isAuthenticated = !!token;
+  const { token, employee_id } = useSelector((state: RootState) => state.auth);
+  // 暂时使用 employee_id 判断登录状态，后续 token 逻辑上线后再改回
+  const isAuthenticated = !!employee_id;
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

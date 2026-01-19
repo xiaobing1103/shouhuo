@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/MainNavigator';
 import { useTheme } from '../../hooks/useTheme';
@@ -9,12 +10,17 @@ type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'Cart'>;
 
 export const CartScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const { colors, textStyles } = useTheme();
 
   return (
     <View 
       className="flex-1"
-      style={{ backgroundColor: colors.background }}
+      style={{ 
+        backgroundColor: colors.background,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
     >
       <ScrollView
         className="flex-1 px-4"

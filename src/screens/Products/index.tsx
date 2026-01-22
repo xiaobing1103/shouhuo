@@ -171,20 +171,22 @@ export const ProductsScreen: React.FC = () => {
         {/* 右侧内容区 */}
         <View style={styles.contentPanel}>
           {/* 商品展示区标题栏 */}
-          <View style={styles.productHeader}>
-            <Text style={styles.productHeaderTitle}>精选订单</Text>
+          <View style={[styles.productHeader, isMobile && { paddingHorizontal: 8, paddingVertical: 8 }]}>
+            <Text style={[styles.productHeaderTitle, isMobile && { fontSize: 14 }]}>精选订单</Text>
             
             <View style={styles.viewModeToggle}>
               <TouchableOpacity
                 style={[
                   styles.viewModeButton,
                   viewMode === 'name' && styles.viewModeButtonActive,
+                  isMobile && { paddingHorizontal: 6, paddingVertical: 4 }
                 ]}
                 onPress={() => setViewMode('name')}
               >
                 <Text style={[
                   styles.viewModeText,
                   viewMode === 'name' && styles.viewModeTextActive,
+                  isMobile && { fontSize: 12 }
                 ]}>商品名称</Text>
               </TouchableOpacity>
               
@@ -194,12 +196,14 @@ export const ProductsScreen: React.FC = () => {
                 style={[
                   styles.viewModeButton,
                   viewMode === 'price' && styles.viewModeButtonActive,
+                  isMobile && { paddingHorizontal: 6, paddingVertical: 4 }
                 ]}
                 onPress={() => setViewMode('price')}
               >
                 <Text style={[
                   styles.viewModeText,
                   viewMode === 'price' && styles.viewModeTextActive,
+                  isMobile && { fontSize: 12 }
                 ]}>价格</Text>
               </TouchableOpacity>
             </View>
@@ -295,20 +299,20 @@ export const ProductsScreen: React.FC = () => {
             </ScrollView>
             
             {/* 合计 */}
-            <View style={styles.cartTotal}>
-              <Text style={styles.cartTotalLabel}>合计：</Text>
-              <Text style={styles.cartTotalAmount}>¥{total.toFixed(2)}</Text>
+            <View style={[styles.cartTotal, isMobile && { paddingVertical: 8, paddingHorizontal: 12 }]}>
+              <Text style={[styles.cartTotalLabel, isMobile && { fontSize: 14 }]}>合计：</Text>
+              <Text style={[styles.cartTotalAmount, isMobile && { fontSize: 18 }]}>¥{total.toFixed(2)}</Text>
             </View>
           </View>
 
           {/* 底部按钮 */}
-          <View style={styles.bottomButtons}>
+          <View style={[styles.bottomButtons, isMobile && { paddingVertical: 10, paddingHorizontal: 12 }]}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, styles.cancelButton, isMobile && { height: 44 }]}
               onPress={handleClearCart}
               disabled={cartItems.length === 0}
             >
-              <Text style={styles.cancelButtonText}>取消订单</Text>
+              <Text style={[styles.cancelButtonText, isMobile && { fontSize: 14 }]}>取消订单</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -316,11 +320,12 @@ export const ProductsScreen: React.FC = () => {
                 styles.button, 
                 styles.payButton,
                 cartItems.length === 0 && styles.payButtonDisabled,
+                isMobile && { height: 44 }
               ]}
               onPress={handlePayment}
               disabled={cartItems.length === 0}
             >
-              <Text style={styles.payButtonText}>支付订单</Text>
+              <Text style={[styles.payButtonText, isMobile && { fontSize: 14 }]}>支付订单</Text>
             </TouchableOpacity>
           </View>
         </View>

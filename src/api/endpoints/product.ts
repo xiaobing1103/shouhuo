@@ -1,5 +1,7 @@
 import { apiClient } from '../request';
 
-export const fetchProductsApi = () => {
-  return apiClient.get('/api/products');
+export const fetchProductsApi = (warehouse_id?: string) => {
+  return apiClient.get('/inventory', {
+    params: { warehouse_id },
+  });
 };

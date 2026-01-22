@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setCredentials } from '../../store/slices/authSlice';
 import { loginApi } from '../../api/endpoints/auth';
+import { apiClient } from '../../api/request';
 import { useTheme } from '../../hooks/useTheme';
 
 // 登录表单 Zod Schema
@@ -64,7 +65,12 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
         Alert.alert('登录失败', responseData.message || '服务器返回数据异常');
         return;
       }
-  
+
+      // 将 token 存储到请求头中
+      if (userData.token) {
+        apiClient.defaults.headers.common['Authorization'] = userData.token;
+      }
+
       dispatch(
         setCredentials({
           token: userData.token || null,

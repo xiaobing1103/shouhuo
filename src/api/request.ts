@@ -22,6 +22,7 @@ apiClient.interceptors.request.use(
     console.log('Request URL:', config.url);
     console.log('Full URL:', `${config.baseURL}${config.url}`);
     console.log('Method:', config.method);
+    console.log('Headers:', JSON.stringify(config.headers));
     console.log('Data:', JSON.stringify(config.data));
     console.log('========================');
     

@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setCredentials } from '../../store/slices/authSlice';
 import { loginApi } from '../../api/endpoints/auth';
+import { apiClient } from '../../api/request';
 import { useTheme } from '../../hooks/useTheme';
 import { InvisibleDebugButton } from '../../components/common/InvisibleDebugButton';
 import { saveCredentials } from '../../hooks/useAutoLogin';
@@ -77,6 +78,11 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
         phone: userData.phone,
       });
   
+      // 将 token 存储到请求头中
+      if (userData.token) {
+        apiClient.defaults.headers.common['Authorization'] = userData.token;
+      }
+
       dispatch(
         setCredentials({
           token: userData.token || null,

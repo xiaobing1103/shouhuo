@@ -1,13 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  ScrollView, 
+  Image,
+  useWindowDimensions 
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/MainNavigator';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCredentials } from '../../store/slices/authSlice';
-import { selectCategory, setCategories, setProducts } from '../../store/slices/productSlice';
+import { selectCategory, setCategories, setProducts, setLoading, setError } from '../../store/slices/productSlice';
 import { addToCart, updateQuantity, clearCart } from '../../store/slices/cartSlice';
+import { ProductService } from '../../services/ProductService';
 import type { RootState } from '../../store';
 import type { Product } from '../../types/models.types';
 import { InvisibleDebugButton } from '../../components/common/InvisibleDebugButton';
@@ -18,161 +27,53 @@ export const ProductsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch();
+  const { width } = useWindowDimensions();
   
-  const { categories, products, selectedCategoryId } = useSelector((state: RootState) => state.product);
+  const isMobile = width < 768; // 增加判断阈值，更适应手机
+  
+  const { categories, products, selectedCategoryId, loading } = useSelector((state: RootState) => state.product);
   const { items: cartItems, total } = useSelector((state: RootState) => state.cart);
+  const { warehouse_id } = useSelector((state: RootState) => state.auth);
   
   const [viewMode, setViewMode] = useState<'name' | 'price'>('name');
 
-  // 初始化模拟数据
+  // 初始化数据
   useEffect(() => {
-    // 模拟类目数据
-    const mockCategories = [
-      { id: '1', name: '饮料', sort: 1 },
-      { id: '2', name: '零食', sort: 2 },
-      { id: '3', name: '方便食品', sort: 3 },
-      { id: '4', name: '乳制品', sort: 4 },
-      { id: '5', name: '生鲜果蔬', sort: 5 },
-    ];
-
-    // 模拟商品数据
-    const mockProducts: Product[] = [
-      { 
-        id: '101', 
-        name: '可口可乐 500ml', 
-        price: 3.5, 
-        stock: 50, 
-        categoryId: '1', 
-        categoryName: '饮料',
-        categorySort: 1,
-        productSort: 1,
-        isSoldOut: false 
-      },
-      { 
-        id: '102', 
-        name: '雪碧 500ml', 
-        price: 3.5, 
-        stock: 30, 
-        categoryId: '1', 
-        categoryName: '饮料',
-        categorySort: 1,
-        productSort: 2,
-        isSoldOut: false 
-      },
-      { 
-        id: '103', 
-        name: '元气森林 380ml', 
-        price: 4.0, 
-        stock: 0, 
-        categoryId: '1', 
-        categoryName: '饮料',
-        categorySort: 1,
-        productSort: 3,
-        isSoldOut: true 
-      },
-      { 
-        id: '104', 
-        name: '农夫山泉 550ml', 
-        price: 2.0, 
-        stock: 100, 
-        categoryId: '1', 
-        categoryName: '饮料',
-        categorySort: 1,
-        productSort: 4,
-        isSoldOut: false 
-      },
-      { 
-        id: '201', 
-        name: '乐事薄荷糖', 
-        price: 8.5, 
-        stock: 25, 
-        categoryId: '2', 
-        categoryName: '零食',
-        categorySort: 2,
-        productSort: 1,
-        isSoldOut: false 
-      },
-      { 
-        id: '202', 
-        name: '德芬巴克巧克力', 
-        price: 15.0, 
-        stock: 15, 
-        categoryId: '2', 
-        categoryName: '零食',
-        categorySort: 2,
-        productSort: 2,
-        isSoldOut: false 
-      },
-      { 
-        id: '203', 
-        name: '奥利奥饼干', 
-        price: 6.5, 
-        stock: 40, 
-        categoryId: '2', 
-        categoryName: '零食',
-        categorySort: 2,
-        productSort: 3,
-        isSoldOut: false 
-      },
-      { 
-        id: '204', 
-        name: '三只松鼠', 
-        price: 3.5, 
-        stock: 60, 
-        categoryId: '2', 
-        categoryName: '零食',
-        categorySort: 2,
-        productSort: 4,
-        isSoldOut: false 
-      },
-      { 
-        id: '301', 
-        name: '康师傅红烧牛肉面', 
-        price: 5.5, 
-        stock: 20, 
-        categoryId: '3', 
-        categoryName: '方便食品',
-        categorySort: 3,
-        productSort: 1,
-        isSoldOut: false 
-      },
-      { 
-        id: '302', 
-        name: '统一老坛酸菜牛肉面', 
-        price: 6.0, 
-        stock: 18, 
-        categoryId: '3', 
-        categoryName: '方便食品',
-        categorySort: 3,
-        productSort: 2,
-        isSoldOut: false 
-      },
-      { 
-        id: '401', 
-        name: '伊利纯牛奶 250ml', 
-        price: 4.5, 
-        stock: 35, 
-        categoryId: '4', 
-        categoryName: '乳制品',
-        categorySort: 4,
-        productSort: 1,
-        isSoldOut: false 
-      },
-      { 
-        id: '402', 
-        name: '蒙牛纯牛奶 250ml', 
-        price: 4.5, 
-        stock: 30, 
-        categoryId: '4', 
-        categoryName: '乳制品',
-        categorySort: 4,
-        productSort: 2,
-        isSoldOut: false 
-      },
-    ];
-
-    dispatch(setCategories(mockCategories));
-    dispatch(setProducts(mockProducts));
+    const fetchData = async () => {
+      dispatch(setLoading(true));
+      try {
+        const productService = new ProductService();
+        const allProducts = await productService.fetchProducts(warehouse_id || undefined);
+        
+        // 排序商品
+        const sortedProducts = productService.sortProducts(allProducts);
+        
+        // 提取分类
+        const categoriesMap = new Map();
+        sortedProducts.forEach(p => {
+          // 排除名称为“全部商品”的原始数据，因为 UI 顶部已经自带了“全部商品”选项
+          if (p.categoryName !== '全部商品' && !categoriesMap.has(p.categoryId)) {
+            categoriesMap.set(p.categoryId, {
+              id: p.categoryId,
+              name: p.categoryName,
+              sort: p.categorySort
+            });
+          }
+        });
+        
+        const categories = Array.from(categoriesMap.values()).sort((a, b) => a.sort - b.sort);
+        
+        dispatch(setCategories(categories));
+        dispatch(setProducts(sortedProducts));
+      } catch (err) {
+        dispatch(setError('加载商品失败'));
+        console.error(err);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+    
+    fetchData();
   }, [dispatch]);
 
   // 过滤当前分类的商品
@@ -216,12 +117,12 @@ export const ProductsScreen: React.FC = () => {
       <InvisibleDebugButton debugVisible={true} />
       
       {/* 头部 - 门店名称 */}
-      <View style={styles.header}>
+      <View style={[styles.header, isMobile && { paddingVertical: 12, paddingHorizontal: 16 }]}>
         <View style={styles.headerLeft}>
           {/* 预留左侧区域 */}
         </View>
         
-        <Text style={styles.storeName}>YHTT门店1 · 北京总店正</Text>
+        <Text style={[styles.storeName, isMobile && { fontSize: 16 }]}>YHTT门店1 · 北京总店正</Text>
         
         <View style={styles.headerRight}>
           {/* 预留右侧区域 */}
@@ -231,7 +132,7 @@ export const ProductsScreen: React.FC = () => {
       {/* 主体区域 */}
       <View style={styles.mainContent}>
         {/* 左侧类目导航 */}
-        <View style={styles.categoryPanel}>
+        <View style={[styles.categoryPanel, isMobile && { width: 90 }]}>
           <ScrollView 
             style={styles.categoryScroll}
             showsVerticalScrollIndicator={false}
@@ -240,12 +141,14 @@ export const ProductsScreen: React.FC = () => {
               style={[
                 styles.categoryItem,
                 !selectedCategoryId && styles.categoryItemActive,
+                isMobile && { paddingVertical: 12, paddingHorizontal: 8 }
               ]}
               onPress={() => dispatch(selectCategory(null))}
             >
               <Text style={[
                 styles.categoryText,
                 !selectedCategoryId && styles.categoryTextActive,
+                isMobile && { fontSize: 13 }
               ]}>全部商品</Text>
             </TouchableOpacity>
             
@@ -255,12 +158,14 @@ export const ProductsScreen: React.FC = () => {
                 style={[
                   styles.categoryItem,
                   selectedCategoryId === category.id && styles.categoryItemActive,
+                  isMobile && { paddingVertical: 12, paddingHorizontal: 8 }
                 ]}
                 onPress={() => handleCategorySelect(category.id)}
               >
                 <Text style={[
                   styles.categoryText,
                   selectedCategoryId === category.id && styles.categoryTextActive,
+                  isMobile && { fontSize: 13 }
                 ]}>{category.name}</Text>
               </TouchableOpacity>
             ))}
@@ -270,20 +175,22 @@ export const ProductsScreen: React.FC = () => {
         {/* 右侧内容区 */}
         <View style={styles.contentPanel}>
           {/* 商品展示区标题栏 */}
-          <View style={styles.productHeader}>
-            <Text style={styles.productHeaderTitle}>精选订单</Text>
+          <View style={[styles.productHeader, isMobile && { paddingHorizontal: 8, paddingVertical: 8 }]}>
+            <Text style={[styles.productHeaderTitle, isMobile && { fontSize: 14 }]}>精选订单</Text>
             
             <View style={styles.viewModeToggle}>
               <TouchableOpacity
                 style={[
                   styles.viewModeButton,
                   viewMode === 'name' && styles.viewModeButtonActive,
+                  isMobile && { paddingHorizontal: 6, paddingVertical: 4 }
                 ]}
                 onPress={() => setViewMode('name')}
               >
                 <Text style={[
                   styles.viewModeText,
                   viewMode === 'name' && styles.viewModeTextActive,
+                  isMobile && { fontSize: 12 }
                 ]}>商品名称</Text>
               </TouchableOpacity>
               
@@ -293,12 +200,14 @@ export const ProductsScreen: React.FC = () => {
                 style={[
                   styles.viewModeButton,
                   viewMode === 'price' && styles.viewModeButtonActive,
+                  isMobile && { paddingHorizontal: 6, paddingVertical: 4 }
                 ]}
                 onPress={() => setViewMode('price')}
               >
                 <Text style={[
                   styles.viewModeText,
                   viewMode === 'price' && styles.viewModeTextActive,
+                  isMobile && { fontSize: 12 }
                 ]}>价格</Text>
               </TouchableOpacity>
             </View>
@@ -313,7 +222,7 @@ export const ProductsScreen: React.FC = () => {
               {filteredProducts.map((product) => (
                 <TouchableOpacity
                   key={product.id}
-                  style={styles.productCard}
+                  style={[styles.productCard, isMobile && { width: '47%', marginHorizontal: '1.5%' }]}
                   onPress={() => handleAddToCart(product)}
                   disabled={product.isSoldOut}
                 >
@@ -332,17 +241,17 @@ export const ProductsScreen: React.FC = () => {
                     
                     {product.isSoldOut && (
                       <View style={styles.soldOutOverlay}>
-                        <Text style={styles.soldOutText}>已售罄</Text>
+                        <Text style={[styles.soldOutText, isMobile && { fontSize: 14 }]}>已售罄</Text>
                       </View>
                     )}
                   </View>
                   
-                  <View style={styles.productInfo}>
+                  <View style={[styles.productInfo, isMobile && { padding: 6 }]}>
                     <Text 
-                      style={styles.productName} 
+                      style={[styles.productName, isMobile && { fontSize: 12, height: 32 }]} 
                       numberOfLines={2}
                     >{product.name}</Text>
-                    <Text style={styles.productPrice}>¥{product.price.toFixed(2)}</Text>
+                    <Text style={[styles.productPrice, isMobile && { fontSize: 14 }]}>¥{product.price.toFixed(2)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -394,20 +303,20 @@ export const ProductsScreen: React.FC = () => {
             </ScrollView>
             
             {/* 合计 */}
-            <View style={styles.cartTotal}>
-              <Text style={styles.cartTotalLabel}>合计：</Text>
-              <Text style={styles.cartTotalAmount}>¥{total.toFixed(2)}</Text>
+            <View style={[styles.cartTotal, isMobile && { paddingVertical: 8, paddingHorizontal: 12 }]}>
+              <Text style={[styles.cartTotalLabel, isMobile && { fontSize: 14 }]}>合计：</Text>
+              <Text style={[styles.cartTotalAmount, isMobile && { fontSize: 18 }]}>¥{total.toFixed(2)}</Text>
             </View>
           </View>
 
           {/* 底部按钮 */}
-          <View style={styles.bottomButtons}>
+          <View style={[styles.bottomButtons, isMobile && { paddingVertical: 10, paddingHorizontal: 12 }]}>
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
+              style={[styles.button, styles.cancelButton, isMobile && { height: 44 }]}
               onPress={handleClearCart}
               disabled={cartItems.length === 0}
             >
-              <Text style={styles.cancelButtonText}>取消订单</Text>
+              <Text style={[styles.cancelButtonText, isMobile && { fontSize: 14 }]}>取消订单</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -415,11 +324,12 @@ export const ProductsScreen: React.FC = () => {
                 styles.button, 
                 styles.payButton,
                 cartItems.length === 0 && styles.payButtonDisabled,
+                isMobile && { height: 44 }
               ]}
               onPress={handlePayment}
               disabled={cartItems.length === 0}
             >
-              <Text style={styles.payButtonText}>支付订单</Text>
+              <Text style={[styles.payButtonText, isMobile && { fontSize: 14 }]}>支付订单</Text>
             </TouchableOpacity>
           </View>
         </View>

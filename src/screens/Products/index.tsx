@@ -10,6 +10,7 @@ import { selectCategory, setCategories, setProducts } from '../../store/slices/p
 import { addToCart, updateQuantity, clearCart } from '../../store/slices/cartSlice';
 import type { RootState } from '../../store';
 import type { Product } from '../../types/models.types';
+import { InvisibleDebugButton } from '../../components/common/InvisibleDebugButton';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'Products'>;
 
@@ -211,6 +212,9 @@ export const ProductsScreen: React.FC = () => {
         paddingBottom: insets.bottom,
       }
     ]}>
+      {/* 左上角隐形调试按钮 - 连续点击20次退出应用 */}
+      <InvisibleDebugButton debugVisible={true} />
+      
       {/* 头部 - 门店名称 */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>

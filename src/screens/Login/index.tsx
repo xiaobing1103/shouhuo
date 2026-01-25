@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { setCredentials } from '../../store/slices/authSlice';
 import { loginApi } from '../../api/endpoints/auth';
 import { useTheme } from '../../hooks/useTheme';
+import { InvisibleDebugButton } from '../../components/common/InvisibleDebugButton';
+import { saveCredentials } from '../../hooks/useAutoLogin';
 
 // 登录表单 Zod Schema
 const loginSchema = z.object({
@@ -64,6 +66,16 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
         Alert.alert('登录失败', responseData.message || '服务器返回数据异常');
         return;
       }
+
+      // 保存登录凭据到本地存储（用于自动登录）
+      await saveCredentials({
+        token: userData.token || null,
+        warehouse_id: userData.warehouse_id || formData.warehouse_id,
+        employee_id: userData.employee_id || formData.employee_id,
+        employee_name: userData.employee_name,
+        employee_role: userData.employee_role,
+        phone: userData.phone,
+      });
   
       dispatch(
         setCredentials({
@@ -112,6 +124,9 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
       }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      {/* 左上角隐形调试按钮 - 连续点击20次退出应用 */}
+      <InvisibleDebugButton debugVisible={true} />
+      
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16 }}
         keyboardShouldPersistTaps="handled"

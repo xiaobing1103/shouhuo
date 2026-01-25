@@ -8,6 +8,8 @@ export interface ConfigState {
   soldOutWatermark: string;
   paymentBackground: string;
   paymentSuccessImage: string;
+  // 机器人服务器地址
+  robotBaseUrl: string;
   // 主题相关配置
   themeMode: ThemeMode;
   customTextColor?: string;           // 自定义文字颜色
@@ -24,6 +26,8 @@ const initialState: ConfigState = {
   soldOutWatermark: '',
   paymentBackground: '',
   paymentSuccessImage: '',
+  // 机器人服务器地址
+  robotBaseUrl: 'http://8.166.128.232:5000/api',
   // 主题相关默认配置
   themeMode: 'light',
   customTextColor: undefined,
@@ -72,6 +76,10 @@ const configSlice = createSlice({
         state.textLineHeight = action.payload.lineHeight;
       }
     },
+    // 设置机器人服务器地址
+    setRobotBaseUrl(state, action: PayloadAction<string>) {
+      state.robotBaseUrl = action.payload;
+    },
   },
 });
 
@@ -79,6 +87,7 @@ export const {
   setConfig, 
   setThemeMode, 
   setCustomColors, 
-  setTextSpacing 
+  setTextSpacing,
+  setRobotBaseUrl,
 } = configSlice.actions;
 export const configReducer = configSlice.reducer;

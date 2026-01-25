@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -6,7 +6,8 @@ import {
   TouchableOpacity, 
   ScrollView, 
   Image,
-  useWindowDimensions 
+  ImageBackground,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,12 +15,16 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MainStackParamList } from '../../navigation/MainNavigator';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearCredentials } from '../../store/slices/authSlice';
+import { setConfig } from '../../store/slices/configSlice';
 import { selectCategory, setCategories, setProducts, setLoading, setError } from '../../store/slices/productSlice';
 import { addToCart, updateQuantity, clearCart } from '../../store/slices/cartSlice';
 import { ProductService } from '../../services/ProductService';
+import { fetchImageApi, uploadScreenshotApi } from '../../api/endpoints/polling';
 import type { RootState } from '../../store';
 import type { Product } from '../../types/models.types';
 import { InvisibleDebugButton } from '../../components/common/InvisibleDebugButton';
+import { ScreenshotService } from '../../services/ScreenshotService';
+import ViewShot, { captureRef } from 'react-native-view-shot';
 
 type NavigationProp = NativeStackNavigationProp<MainStackParamList, 'Products'>;
 
@@ -34,8 +39,36 @@ export const ProductsScreen: React.FC = () => {
   const { categories, products, selectedCategoryId, loading } = useSelector((state: RootState) => state.product);
   const { items: cartItems, total } = useSelector((state: RootState) => state.cart);
   const { warehouse_id } = useSelector((state: RootState) => state.auth);
+  const { backgroundImage } = useSelector((state: RootState) => state.config);
   
   const [viewMode, setViewMode] = useState<'name' | 'price'>('name');
+  const hasInitialized = useRef(false);
+  const viewShotRef = useRef<ViewShot>(null);
+
+  // 注册全局截图函数，供轮询等后台任务使用
+  useEffect(() => {
+    const captureScreen = async (): Promise<string | null> => {
+      if (!viewShotRef.current) {
+        return null;
+      }
+      try {
+        const uri = await captureRef(viewShotRef, {
+          format: 'png',
+          quality: 0.9,
+        });
+        return uri;
+      } catch (error) {
+        console.error('[Products] 截图失败:', error);
+        return null;
+      }
+    };
+
+    ScreenshotService.registerCapture(captureScreen);
+
+    return () => {
+      ScreenshotService.unregisterCapture();
+    };
+  }, []);
 
   // 初始化数据
   useEffect(() => {
@@ -76,6 +109,74 @@ export const ProductsScreen: React.FC = () => {
     fetchData();
   }, [dispatch]);
 
+  // 页面首次加载后执行截图上传和图片配置获取
+  useEffect(() => {
+    if (hasInitialized.current || !warehouse_id) {
+      return;
+    }
+    hasInitialized.current = true;
+
+    const initAfterMount = async () => {
+      // 1. 获取图片配置
+      try {
+        console.log('[Products] 获取图片配置...');
+        const imageResponse = await fetchImageApi(warehouse_id);
+        
+        if (imageResponse.data.code === 200 && imageResponse.data.data?.length > 0) {
+          const imageConfig = imageResponse.data.data[0];
+          
+          dispatch(setConfig({
+            backgroundImage: imageConfig.background || null,
+            soldOutWatermark: imageConfig.sold_out || '',
+            paymentBackground: imageConfig.payment_background || '',
+            paymentSuccessImage: imageConfig.payment_success || '',
+          }));
+          
+          console.log('[Products] 图片配置更新成功');
+        }
+      } catch (error) {
+        console.error('[Products] 获取图片配置失败:', error);
+      }
+
+      // 2. 截图上传
+      try {
+        console.log('[Products] 执行截图上传...');
+        
+        if (viewShotRef.current) {
+          // 使用 react-native-view-shot 截取当前视图
+          const uri = await captureRef(viewShotRef, {
+            format: 'png',
+            quality: 0.9,
+          });
+          
+          if (uri) {
+            const imageFile = {
+              uri: uri,
+              type: 'image/png',
+              name: 'screenshot.png',
+            };
+            
+            const response = await uploadScreenshotApi(imageFile, warehouse_id);
+            
+            if (response.data.code === 200) {
+              console.log('[Products] 截图上传成功');
+            } else {
+              console.warn('[Products] 截图上传失败:', response.data.message);
+            }
+          }
+        } else {
+          console.warn('[Products] viewShotRef 不可用');
+        }
+      } catch (error) {
+        console.error('[Products] 截图上传失败:', error);
+      }
+    };
+
+    // 延迟执行，确保页面已渲染完成
+    const timer = setTimeout(initAfterMount, 500);
+    return () => clearTimeout(timer);
+  }, [warehouse_id, dispatch]);
+
   // 过滤当前分类的商品
   const filteredProducts = useMemo(() => {
     if (!selectedCategoryId) return products;
@@ -105,14 +206,9 @@ export const ProductsScreen: React.FC = () => {
     navigation.navigate('Payment');
   };
 
-  return (
-    <View style={[
-      styles.container,
-      {
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
-      }
-    ]}>
+  // 渲染容器内容
+  const renderContent = () => (
+    <>
       {/* 左上角隐形调试按钮 - 连续点击20次退出应用 */}
       <InvisibleDebugButton debugVisible={true} />
       
@@ -334,7 +430,42 @@ export const ProductsScreen: React.FC = () => {
           </View>
         </View>
       </View>
-    </View>
+    </>
+  );
+
+  // 根据是否有背景图片选择不同的容器
+  if (backgroundImage) {
+    return (
+      <ViewShot ref={viewShotRef} style={{ flex: 1 }} options={{ format: 'png', quality: 0.9 }}>
+        <ImageBackground
+          source={{ uri: backgroundImage }}
+          style={[
+            styles.container,
+            {
+              paddingTop: insets.top,
+              paddingBottom: insets.bottom,
+            }
+          ]}
+          resizeMode="cover"
+        >
+          {renderContent()}
+        </ImageBackground>
+      </ViewShot>
+    );
+  }
+
+  return (
+    <ViewShot ref={viewShotRef} style={{ flex: 1 }} options={{ format: 'png', quality: 0.9 }}>
+      <View style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        }
+      ]}>
+        {renderContent()}
+      </View>
+    </ViewShot>
   );
 };
 

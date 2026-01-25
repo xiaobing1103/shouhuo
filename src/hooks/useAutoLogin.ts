@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { setCredentials, clearCredentials, AuthState } from '../store/slices/authSlice';
+import { setRobotBaseUrl } from '../store/slices/configSlice';
 import { verifyTokenApi } from '../api/endpoints/auth';
 import { storage } from '../utils/storage';
 import { STORAGE_KEYS } from '../config/constants';
@@ -45,6 +46,13 @@ export const useAutoLogin = (): UseAutoLoginResult => {
       const storedCredentials = await storage.get<StoredCredentials>(
         STORAGE_KEYS.AUTH_CREDENTIALS
       );
+      
+      // 加载机器人服务器地址
+      const savedRobotUrl = await storage.get<string>(STORAGE_KEYS.ROBOT_BASE_URL);
+      if (savedRobotUrl) {
+        dispatch(setRobotBaseUrl(savedRobotUrl));
+        console.log('[AutoLogin] 已加载机器人服务器地址:', savedRobotUrl);
+      }
 
       if (!storedCredentials) {
         // 没有存储的凭据，直接显示登录页面

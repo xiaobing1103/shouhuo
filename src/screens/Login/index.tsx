@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { z } from 'zod';
@@ -151,17 +152,11 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
 
         {/* 顶部装饰图片区域 - 紧凑版 */}
         <View className="items-center mt-2 mb-3">
-          <View 
-            className="w-[100px] h-[100px] rounded-full justify-center items-center"
-            style={{ backgroundColor: colors.primary + '99' }}
-          >
-            <Text 
-              className="text-lg font-bold"
-              style={{ color: colors.textInverse }}
-            >
-              售货机
-            </Text>
-          </View>
+          <Image 
+            source={require('../../../assets/jinma.png')}
+            className=" h-[100px] "
+            resizeMode="contain"
+          />
         </View>
 
         {/* 欢迎标题 - 紧凑版 */}
@@ -183,14 +178,14 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
               className="text-xl font-bold"
               style={{ color: colors.primary }}
             >
-              售货机
+              金马游乐
             </Text>
           </View>
         </View>
 
         {/* 输入表单 - 紧凑版 */}
         <View className="mb-3">
-          {/* 仓库ID */}
+          {/* 门店ID */}
           <View 
             className="rounded-lg mb-2 shadow-sm"
             style={{ backgroundColor: colors.backgroundCard }}
@@ -201,7 +196,7 @@ export const LoginScreen: React.FC<{ navigation?: any }> = ({ navigation }) => {
                 color: colors.text,
                 letterSpacing: textStyles.letterSpacing,
               }}
-              placeholder="仓库ID"
+              placeholder="门店ID"
               placeholderTextColor={colors.textPlaceholder}
               value={warehouse_id}
               onChangeText={setWarehouseId}

@@ -10,6 +10,14 @@ import { store } from './store';
 import { RootNavigator } from './navigation';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { useAutoLogin } from './hooks/useAutoLogin';
+import { usePolling } from './hooks/usePolling';
+
+// 全局轮询组件 - 在登录后自动启动轮询
+const PollingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // 初始化轮询 hook，它会根据登录状态自动启动/停止轮询
+  usePolling();
+  return <>{children}</>;
+};
 
 // 内部应用组件，处理自动登录逻辑
 const AppContent: React.FC = () => {
@@ -26,9 +34,11 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <NavigationContainer>
-      <RootNavigator />
-    </NavigationContainer>
+    <PollingProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </PollingProvider>
   );
 };
 

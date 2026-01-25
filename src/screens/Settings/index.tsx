@@ -9,10 +9,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import { storage } from '../../utils/storage';
 import { useTheme } from '../../hooks/useTheme';
+import { setRobotBaseUrl } from '../../store/slices/configSlice';
+import { STORAGE_KEYS } from '../../config/constants';
+import type { RootState } from '../../store';
 
-const STORAGE_KEYS = {
+const LOCAL_STORAGE_KEYS = {
   SERVER_BASE_URL: 'server_base_url',
 };
 
@@ -20,8 +24,13 @@ export const SettingsScreen: React.FC = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const dispatch = useDispatch();
+  
+  // 从 Redux 获取当前的 robotBaseUrl
+  const currentRobotBaseUrl = useSelector((state: RootState) => state.config.robotBaseUrl);
   
   const [serverBaseUrl, setServerBaseUrl] = useState('');
+  const [robotBaseUrl, setRobotBaseUrlState] = useState('');
   const [loading, setLoading] = useState(false);
 
   // 加载已保存的配置
@@ -31,9 +40,15 @@ export const SettingsScreen: React.FC = () => {
 
   const loadSettings = async () => {
     try {
-      const savedServerUrl = await storage.get<string>(STORAGE_KEYS.SERVER_BASE_URL);
+      const savedServerUrl = await storage.get<string>(LOCAL_STORAGE_KEYS.SERVER_BASE_URL);
+      const savedRobotUrl = await storage.get<string>(STORAGE_KEYS.ROBOT_BASE_URL);
       
       if (savedServerUrl) setServerBaseUrl(savedServerUrl);
+      if (savedRobotUrl) {
+        setRobotBaseUrlState(savedRobotUrl);
+      } else if (currentRobotBaseUrl) {
+        setRobotBaseUrlState(currentRobotBaseUrl);
+      }
     } catch (error) {
       console.error('加载设置失败:', error);
     }
@@ -48,9 +63,18 @@ export const SettingsScreen: React.FC = () => {
         Alert.alert('提示', '服务器地址格式不正确');
         return;
       }
+      
+      if (robotBaseUrl && !isValidUrl(robotBaseUrl)) {
+        Alert.alert('提示', '机器人服务器地址格式不正确');
+        return;
+      }
 
       // 保存配置
-      await storage.set(STORAGE_KEYS.SERVER_BASE_URL, serverBaseUrl);
+      await storage.set(LOCAL_STORAGE_KEYS.SERVER_BASE_URL, serverBaseUrl);
+      await storage.set(STORAGE_KEYS.ROBOT_BASE_URL, robotBaseUrl);
+      
+      // 更新 Redux 状态
+      dispatch(setRobotBaseUrl(robotBaseUrl));
       
       Alert.alert('成功', '设置已保存', [
         {
@@ -76,8 +100,11 @@ export const SettingsScreen: React.FC = () => {
           text: '确定',
           style: 'destructive',
           onPress: async () => {
-            await storage.remove(STORAGE_KEYS.SERVER_BASE_URL);
+            await storage.remove(LOCAL_STORAGE_KEYS.SERVER_BASE_URL);
+            await storage.remove(STORAGE_KEYS.ROBOT_BASE_URL);
             setServerBaseUrl('');
+            setRobotBaseUrlState('');
+            dispatch(setRobotBaseUrl(''));
             Alert.alert('成功', '已恢复默认设置');
           },
         },
@@ -168,6 +195,38 @@ export const SettingsScreen: React.FC = () => {
               editable={!loading}
             />
           </View>
+        </View>
+
+        {/* Robot Base URL */}
+        <View className="mb-4">
+          <Text 
+            className="text-sm font-medium mb-2"
+            style={{ color: colors.text }}
+          >
+            机器人服务器地址 (Robot Base URL)
+          </Text>
+          <View 
+            className="rounded-lg shadow-sm"
+            style={{ backgroundColor: colors.backgroundCard }}
+          >
+            <TextInput
+              className="h-11 px-3 text-sm"
+              style={{ color: colors.text }}
+              placeholder="默认: http://8.166.128.232:5000/api"
+              placeholderTextColor={colors.textPlaceholder}
+              value={robotBaseUrl}
+              onChangeText={setRobotBaseUrlState}
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!loading}
+            />
+          </View>
+          <Text 
+            className="text-xs mt-1"
+            style={{ color: colors.textSecondary }}
+          >
+            用于接收轮询任务中的机器人请求转发
+          </Text>
         </View>
 
         {/* 操作按钮 */}

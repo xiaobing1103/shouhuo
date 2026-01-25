@@ -54,3 +54,58 @@ export interface CartItem {
   product: Product;
   quantity: number;
 }
+
+// ========== 轮询任务相关类型 ==========
+
+// 任务状态基础结构
+export interface TaskStatus<T = any[]> {
+  data: T;
+  message: string;
+  status: boolean;
+}
+
+// request 任务数据结构
+export interface RequestTaskData {
+  base_url: string;
+  json_data: any[];
+  route: string;
+}
+
+// task_get 接口响应数据结构
+export interface TaskGetData {
+  get_image: TaskStatus;
+  inventory: TaskStatus;
+  request: TaskStatus<RequestTaskData>;
+  screenshot: TaskStatus;
+}
+
+// task_get 接口完整响应
+export interface TaskGetResponse {
+  code: number;
+  data: TaskGetData;
+  message: string;
+}
+
+// yht_image 图片配置数据
+export interface ImageConfigItem {
+  background: string;
+  created_at: string;
+  payment_background: string;
+  payment_success: string;
+  sold_out: string;
+  updated_at: string;
+  warehouse_id: string;
+}
+
+// yht_image 接口响应
+export interface YhtImageResponse {
+  code: number;
+  data: ImageConfigItem[];
+  message: string;
+}
+
+// screenshot 上传响应
+export interface ScreenshotUploadResponse {
+  code: number;
+  message: string;
+}
